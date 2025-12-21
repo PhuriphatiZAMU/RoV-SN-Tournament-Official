@@ -6,8 +6,21 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// CORS Configuration - Allow GitHub Pages and localhost
+const corsOptions = {
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:5500',
+        'http://127.0.0.1:5500',
+        'https://phuriphatizamu.github.io',
+        'https://rov-sn-tournament-api.vercel.app'
+    ],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // MongoDB Connection
