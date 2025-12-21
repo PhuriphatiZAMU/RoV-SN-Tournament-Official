@@ -1,0 +1,187 @@
+# ROV SN Tournament 2026 - Official Hub
+
+🏆 Official tournament management website for ROV SN Tournament 2026 with real-time data from MongoDB Atlas.
+
+## 🚀 Features
+
+- **Live Tournament Schedule** - Real-time match schedules with results
+- **Standings & Rankings** - Dynamic team standings and points tracking  
+- **Player Statistics** - Individual player performance metrics
+- **Admin Panel** - Match result management system
+- **Responsive Design** - Works on Desktop, Tablet, and Mobile
+
+## 🛠️ Tech Stack
+
+**Frontend:**
+- HTML5, CSS3, JavaScript ES6
+- Bootstrap 5 & Tailwind CSS
+- Font Awesome Icons
+
+**Backend:**
+- Node.js + Express.js
+- MongoDB Atlas (Cloud Database)
+- RESTful API Architecture
+
+## 📦 Installation
+
+### Prerequisites
+- Node.js (v16 or higher)
+- MongoDB Atlas account
+- Git
+
+### Setup
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/PhuriphatiZAMU/RoVSN-Official_Hub.git
+cd RoVSN-Official_Hub
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Configure environment variables**
+
+Create a `.env` file in the root directory:
+```env
+MONGODB_URI=your_mongodb_atlas_connection_string
+PORT=3001
+```
+
+4. **Seed database (First time only)**
+```bash
+node seed-data.js
+node seed-standings.js
+node seed-players.js
+node seed-schedule-results.js
+```
+
+5. **Start the server**
+```bash
+npm start
+```
+
+The server will run on `http://localhost:3001`
+
+## 🌐 Deployment
+
+### Deploy to Render
+
+1. **Create account** at [render.com](https://render.com)
+
+2. **Create New Web Service**
+   - Connect your GitHub repository
+   - Select branch: `main`
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+
+3. **Add Environment Variables**
+   - Key: `MONGODB_URI`
+   - Value: Your MongoDB Atlas connection string
+
+4. **Deploy!** 🎉
+
+### Deploy to Railway
+
+1. **Create account** at [railway.app](https://railway.app)
+
+2. **New Project → Deploy from GitHub**
+   - Select your repository
+   - Railway auto-detects Node.js
+
+3. **Add Environment Variables**
+   - `MONGODB_URI`: Your connection string
+
+4. **Deploy automatically** 🚀
+
+### Deploy to Vercel (Serverless)
+
+1. **Install Vercel CLI**
+```bash
+npm install -g vercel
+```
+
+2. **Configure vercel.json** (already included)
+
+3. **Deploy**
+```bash
+vercel --prod
+```
+
+## 📁 Project Structure
+
+```
+RoVSN-Official_Hub/
+├── img/                    # Images and assets
+├── Key-Visual-img/         # Tournament key visuals
+├── admin-results.html      # Admin panel for match results
+├── app.js                  # Frontend logic
+├── server.js               # Express backend
+├── index.html              # Home page
+├── schedule.html           # Match schedule
+├── standings.html          # Team standings
+├── teams.html              # Team list
+├── players.html            # Player statistics
+├── styles.css              # Custom styles
+├── data.js                 # Static data
+├── navigation.js           # Navigation handler
+├── seed-*.js               # Database seed scripts
+├── check-data.js           # Data verification tool
+└── package.json            # Dependencies
+```
+
+## 🔑 API Endpoints
+
+### Schedules
+- `GET /api/schedules` - Get all schedules
+- `GET /api/schedules/latest` - Get latest schedule
+
+### Standings
+- `GET /api/standings` - Get all standings
+- `GET /api/standings/latest` - Get latest standings
+
+### Players
+- `GET /api/players` - Get all players
+- `GET /api/players/latest` - Get latest player stats
+
+### Match Results
+- `GET /api/schedule-results/latest` - Get latest results
+- `POST /api/schedule-results/match` - Update match result
+- `DELETE /api/schedule-results/match` - Delete match result
+
+### Health Check
+- `GET /api/health` - Server health status
+
+## 👥 Admin Panel
+
+Access the admin panel at `/admin-results.html` to:
+- Add match results
+- Edit scores
+- Delete results
+- View all 8 match days
+
+## 🔒 Security
+
+- Environment variables stored in `.env` (not committed to Git)
+- CORS enabled for specific origins only
+- MongoDB connection uses authentication
+- Input validation on all API endpoints
+
+## 📝 License
+
+Copyright © 2026 RoV SN Tournament. All rights reserved.
+
+## 👨‍💻 Developer
+
+**PhuriphatiZAMU**
+- GitHub: [@PhuriphatiZAMU](https://github.com/PhuriphatiZAMU)
+
+## 🆘 Support
+
+For issues or questions, please open an issue on GitHub or contact the developer.
+
+---
+
+Made with ❤️ for ROV SN Tournament 2026
