@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Detail | ROV SN TOURNAMENT 2026</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-[#0B1120] border-b-4 border-primary-custom shadow-lg relative">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border-2 border-primary-custom shadow-[0_0_10px_rgba(21,200,255,0.5)]">
+                    <i class="fas fa-trophy text-primary-custom text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl font-bold tracking-wide leading-none text-white m-0">ROV SN <span class="text-primary-custom">2026</span></h1>
+                    <p class="text-[10px] text-gray-400 tracking-wider uppercase m-0">Official Tournament Hub</p>
+                </div>
+            </div>
+
+            <!-- Menu (Desktop) -->
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-wide">
+                <a href="index.html" class="nav-link-custom">หน้าหลัก</a>
+                <a href="schedule.html" class="nav-link-custom">ตารางแข่ง</a>
+                <a href="standings.html" class="nav-link-custom">ตารางคะแนน</a>
+                <a href="teams.html" class="nav-link-custom">ทีมแข่ง</a>
+            </div>
+
+            <!-- Mobile Menu Btn -->
+            <button class="md:hidden text-white text-xl bg-transparent border-0" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="md:hidden absolute top-16 left-0 right-0 bg-[#0B1120] border-b-2 border-primary-custom shadow-xl z-40 p-4 flex flex-col gap-4 transition-all duration-300 ease-in-out opacity-0 -translate-y-4 pointer-events-none invisible origin-top">
+            <a href="index.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">หน้าหลัก</a>
+            <a href="schedule.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ตารางแข่ง</a>
+            <a href="standings.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ตารางคะแนน</a>
+            <a href="teams.html" class="text-left text-gray-300 hover:text-white font-medium py-2 w-full">ทีมแข่ง</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 relative">
+            <!-- Back Button -->
+            <button onclick="window.location.href='index.html'" class="absolute top-6 left-6 bg-black/50 hover:bg-primary-custom text-white px-4 py-2 rounded-full backdrop-blur-md transition z-20 flex items-center gap-2 text-sm font-bold border-0">
+                <i class="fas fa-arrow-left"></i> ย้อนกลับ
+            </button>
+
+            <!-- Hero Image -->
+            <div class="h-[400px] w-full relative">
+                <img id="news-detail-image" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-8 text-white">
+                    <span id="news-detail-category" class="bg-primary-custom text-white text-xs font-bold px-3 py-1 rounded shadow mb-3 inline-block uppercase tracking-wider">Category</span>
+                    <h1 id="news-detail-title" class="text-3xl md:text-4xl font-heading font-bold leading-tight mb-2 text-shadow">News Title</h1>
+                    <div class="flex items-center gap-4 text-sm text-gray-300">
+                        <span><i class="far fa-calendar-alt mr-2"></i> <span id="news-detail-date">Date</span></span>
+                        <span><i class="far fa-user mr-2"></i> <span id="news-detail-author">Author</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Body -->
+            <div class="p-8 md:p-12">
+                <div id="news-detail-content" class="article-content text-gray-700 text-lg leading-relaxed">
+                    <!-- Content goes here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#0B1120] border-t-4 border-primary-custom py-12 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg shadow-cyan-500/50">
+                        <i class="fas fa-trophy text-primary-custom text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-heading text-2xl font-bold text-white tracking-wide m-0">ROV SN TOURNAMENT</h2>
+                        <p class="text-gray-400 text-sm m-0">The Ultimate Mobile MOBA Competition</p>
+                    </div>
+                </div>
+                <div class="flex gap-6">
+                    <a href="https://www.facebook.com/profile.php?id=61573326877157&ref=pl_edit_xav_ig_profile_page_web#" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:bg-primary-custom hover:text-white transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.instagram.com/sn.ac.th?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:bg-primary-custom hover:text-white transition"><i class="fab fa-instagram"></i></a>
+                    <a href="https://discord.gg/eAjAAM58wd" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:bg-primary-custom hover:text-white transition"><i class="fab fa-discord"></i></a>
+                </div>
+            </div>
+            <div class="border-t border-white/10 mt-8 pt-8 text-center text-gray-500 text-xs">
+                &copy; 2026 RoV SN Tournament. All rights reserved. <br>
+                Powered by PhuriphatiZAMU.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script type="module" src="navigation.js"></script>
+    <script type="module">
+        import { newsData } from './data.js';
+        
+        // Load news from sessionStorage or URL parameter
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const newsId = parseInt(urlParams.get('id'));
+            
+            let news = null;
+            
+            // Try to get from sessionStorage first
+            const storedNews = sessionStorage.getItem('selectedNews');
+            if (storedNews) {
+                news = JSON.parse(storedNews);
+            } else if (newsId) {
+                // Fallback to finding by ID
+                news = newsData.find(n => n.id === newsId);
+            }
+            
+            if (news) {
+                document.getElementById('news-detail-image').src = news.image;
+                document.getElementById('news-detail-category').innerText = news.category;
+                document.getElementById('news-detail-title').innerText = news.title;
+                document.getElementById('news-detail-date').innerText = news.date;
+                document.getElementById('news-detail-author').innerText = news.author;
+                document.getElementById('news-detail-content').innerHTML = news.content;
+            } else {
+                // Redirect if no news found
+                window.location.href = 'index.html';
+            }
+        });
+        
+        // Share Functions
+        function shareOnFacebook() {
+            const url = window.location.href;
+            const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+            window.open(shareUrl, '_blank', 'width=600,height=400');
+        }
+        
+        function shareOnTwitter() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const newsId = parseInt(urlParams.get('id'));
+            const storedNews = sessionStorage.getItem('selectedNews');
+            let title = 'ROV SN TOURNAMENT 2026';
+            
+            if (storedNews) {
+                const news = JSON.parse(storedNews);
+                title = news.title;
+            }
+            
+            const url = window.location.href;
+            const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+            window.open(shareUrl, '_blank', 'width=600,height=400');
+        }
+        
+        function shareOnLine() {
+            const url = window.location.href;
+            const shareUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`;
+            window.open(shareUrl, '_blank', 'width=600,height=400');
+        }
+    </script>
+</body>
+</html>
