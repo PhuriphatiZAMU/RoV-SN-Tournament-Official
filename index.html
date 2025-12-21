@@ -90,10 +90,10 @@
     <main class="flex-grow container mx-auto px-4 py-8">
 
         <!-- Hero / KV Carousel & Up Next -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-1 gap-6 mb-12">
                 
                 <!-- KEY VISUAL CAROUSEL (Bootstrap 5) -->
-                <div class="lg:col-span-2 bg-black rounded-2xl overflow-hidden shadow-xl border border-gray-100 relative group h-[450px] lg:h-[500px] w-full">
+                <div class="lg:col-span-2 bg-black rounded-2xl overflow-hidden shadow-xl border border-gray-100 relative group w-full h-auto lg:h-full aspect-[21/9] lg:aspect-auto">
                     
                     <div id="carouselExampleControlsKV" class="carousel slide h-100 w-100" data-bs-ride="carousel" data-bs-interval="3000">
                         <div class="carousel-inner h-100" id="kv-carousel-inner">
@@ -114,7 +114,7 @@
                 </div>
 
                 <!-- Up Next (Dynamic from DB) -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-xl flex flex-col h-[450px] lg:h-[500px] overflow-hidden">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-xl flex flex-col h-auto lg:h-full overflow-hidden">
                     <div class="p-4 border-b border-gray-100 bg-gray-50">
                         <h3 class="font-bold text-gray-800 flex items-center gap-2 m-0">
                             <i class="fas fa-clock text-primary-custom"></i> แมตช์ถัดไป (Up Next)
