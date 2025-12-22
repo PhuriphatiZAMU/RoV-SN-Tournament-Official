@@ -7,7 +7,6 @@
 - **Live Tournament Schedule** - Real-time match schedules with results
 - **Standings & Rankings** - Dynamic team standings and points tracking  
 - **Player Statistics** - Individual player performance metrics
-- **Admin Panel** - Match result management system
 - **Responsive Design** - Works on Desktop, Tablet, and Mobile
 
 ## 🛠️ Tech Stack
@@ -50,15 +49,7 @@ MONGODB_URI=your_mongodb_atlas_connection_string
 PORT=3001
 ```
 
-4. **Seed database (First time only)**
-```bash
-node seed-data.js
-node seed-standings.js
-node seed-players.js
-node seed-schedule-results.js
-```
-
-5. **Start the server**
+4. **Start the server**
 ```bash
 npm start
 ```
@@ -116,19 +107,16 @@ vercel --prod
 RoVSN-Official_Hub/
 ├── img/                    # Images and assets
 ├── Key-Visual-img/         # Tournament key visuals
-├── admin-results.html      # Admin panel for match results
 ├── app.js                  # Frontend logic
 ├── server.js               # Express backend
 ├── index.html              # Home page
 ├── schedule.html           # Match schedule
-├── standings.html          # Team standings
+├── table.html              # Team standings
 ├── teams.html              # Team list
 ├── players.html            # Player statistics
 ├── styles.css              # Custom styles
 ├── data.js                 # Static data
 ├── navigation.js           # Navigation handler
-├── seed-*.js               # Database seed scripts
-├── check-data.js           # Data verification tool
 └── package.json            # Dependencies
 ```
 
@@ -148,19 +136,9 @@ RoVSN-Official_Hub/
 
 ### Match Results
 - `GET /api/schedule-results/latest` - Get latest results
-- `POST /api/schedule-results/match` - Update match result
-- `DELETE /api/schedule-results/match` - Delete match result
 
 ### Health Check
 - `GET /api/health` - Server health status
-
-## 👥 Admin Panel
-
-Access the admin panel at `/admin-results.html` to:
-- Add match results
-- Edit scores
-- Delete results
-- View all 8 match days
 
 ## 🔒 Security
 
