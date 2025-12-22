@@ -18,7 +18,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Custom Styles -->
-    <link href="styles.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
 </head>
 <body class="flex flex-col min-h-screen">
 
@@ -53,10 +53,10 @@
             <!-- Menu (Desktop) -->
             <div class="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-wide">
                 <a href="index.html" class="nav-link-custom active">หน้าหลัก</a>
-                <a href="schedule.html" class="nav-link-custom">ตารางแข่ง</a>
-                <a href="table.html" class="nav-link-custom">ตารางคะแนน</a>
-                <a href="teams.html" class="nav-link-custom">ทีมแข่ง</a>
-                <a href="players.html" class="nav-link-custom">สถิติผู้เล่น</a>
+                <a href="html/schedule.html" class="nav-link-custom">ตารางแข่ง</a>
+                <a href="html/table.html" class="nav-link-custom">ตารางคะแนน</a>
+                <a href="html/teams.html" class="nav-link-custom">ทีมแข่ง</a>
+                <a href="html/players.html" class="nav-link-custom">สถิติผู้เล่น</a>
             </div>
 
             <!-- User Profile / Login (Optional) -->
@@ -76,10 +76,10 @@
         <!-- Mobile Menu Dropdown (Animated) -->
         <div id="mobile-menu" class="md:hidden absolute top-16 left-0 right-0 bg-[#0B1120] border-b-2 border-primary-custom shadow-xl z-40 p-4 flex flex-col gap-4 transition-all duration-300 ease-in-out opacity-0 -translate-y-4 pointer-events-none invisible origin-top">
             <a href="index.html" class="text-left text-white font-medium py-2 border-b border-gray-800 w-full">หน้าหลัก</a>
-            <a href="schedule.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ตารางแข่ง</a>
-            <a href="table.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ตารางคะแนน</a>
-            <a href="teams.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ทีมแข่ง</a>
-            <a href="players.html" class="text-left text-gray-300 hover:text-white font-medium py-2 w-full">สถิติผู้เล่น</a>
+            <a href="html/schedule.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ตารางแข่ง</a>
+            <a href="html/table.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ตารางคะแนน</a>
+            <a href="html/teams.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ทีมแข่ง</a>
+            <a href="html/players.html" class="text-left text-gray-300 hover:text-white font-medium py-2 w-full">สถิติผู้เล่น</a>
             <div class="pt-2 text-xs text-gray-500 flex items-center gap-2">
                 Status: <span id="mobileConnectionStatus">Connecting...</span>
             </div>
@@ -194,8 +194,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Custom Scripts -->
-    <script type="module" src="navigation.js"></script>
-    <script type="module" src="app.js"></script>
+    <script type="module" src="js/navigation.js"></script>
+    <script type="module" src="js/app.js"></script>
     
     <!-- Loading Screen Handler -->
     <script>

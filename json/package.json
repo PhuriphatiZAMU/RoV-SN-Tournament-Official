@@ -2,14 +2,14 @@
   "name": "rovsn-official-hub-server",
   "version": "1.0.0",
   "description": "Backend server for ROV SN Tournament 2026 Official Hub with MongoDB Atlas",
-  "main": "server.js",
+  "main": "../js/server.js",
   "engines": {
     "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node ../js/server.js",
+    "dev": "nodemon ../js/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

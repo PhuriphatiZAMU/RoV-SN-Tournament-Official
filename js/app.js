@@ -81,7 +81,9 @@ export function openNews(id) {
     const news = newsData.find(n => n.id === id);
     if (!news) return;
     sessionStorage.setItem('selectedNews', JSON.stringify(news));
-    window.location.href = `news-detail.html?id=${id}`;
+    // Check if we're on index or in html folder
+    const basePath = window.location.pathname.includes('/html/') ? '' : 'html/';
+    window.location.href = `${basePath}news-detail.html?id=${id}`;
 }
 
 // --- MAIN FETCH FUNCTION (MongoDB Version) ---
@@ -103,15 +105,15 @@ export async function fetchTournamentData() {
         
         const schedules = await scheduleResponse.json();
 
-        // 3. Fetch Results Data
-        let resultsData = null;
+        // 3. Fetch Completed Fixtures Data (from fixtures collection)
+        let fixturesData = null;
         try {
-            const resultsResponse = await fetch(`${API_BASE_URL}/schedule-results/latest`);
-            if (resultsResponse.ok) {
-                resultsData = await resultsResponse.json();
+            const fixturesResponse = await fetch(`${API_BASE_URL}/fixtures/completed`);
+            if (fixturesResponse.ok) {
+                fixturesData = await fixturesResponse.json();
             }
         } catch (e) {
-            console.log('No results data yet');
+            console.log('No fixtures data yet');
         }
 
         if (schedules.length === 0) {
@@ -120,16 +122,29 @@ export async function fetchTournamentData() {
             // Get the latest schedule
             const latestSchedule = schedules[0];
 
-            // Merge results into schedule
-            if (resultsData?.results && latestSchedule?.schedule) {
-                latestSchedule.schedule.forEach((round, dayIndex) => {
-                    const dayResults = resultsData.results[dayIndex];
-                    if (dayResults?.matches) {
-                        round.matches.forEach((match, matchIndex) => {
-                            const result = dayResults.matches[matchIndex];
-                            if (result && result.team1Score !== undefined) {
-                                match.team1Score = result.team1Score;
-                                match.team2Score = result.team2Score;
+            // Merge fixtures results into schedule (ใช้ fixtures collection แทน)
+            if (fixturesData?.fixtures && latestSchedule?.schedule) {
+                latestSchedule.schedule.forEach((round) => {
+                    // หา fixtures ของวันนี้ (ใช้ matchDay)
+                    const dayFixtures = fixturesData.fixtures.filter(f => f.matchDay === round.day);
+                    
+                    if (dayFixtures.length > 0) {
+                        round.matches.forEach((match) => {
+                            // หา fixture ที่ตรงกับคู่ทีมนี้
+                            const fixture = dayFixtures.find(f => 
+                                (f.team1 === match.blue && f.team2 === match.red) ||
+                                (f.team1 === match.red && f.team2 === match.blue)
+                            );
+                            
+                            if (fixture && fixture.status === 'จบการแข่งขัน') {
+                                // กำหนดสกอร์ตามทีม
+                                if (fixture.team1 === match.blue) {
+                                    match.team1Score = fixture.score1;
+                                    match.team2Score = fixture.score2;
+                                } else {
+                                    match.team1Score = fixture.score2;
+                                    match.team2Score = fixture.score1;
+                                }
                                 match.status = 'completed';
                             }
                         });

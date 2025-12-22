@@ -105,19 +105,26 @@ vercel --prod
 
 ```
 RoVSN-Official_Hub/
+├── css/
+│   └── styles.css          # Custom styles
+├── html/
+│   ├── news-detail.html    # News detail page
+│   ├── players.html        # Player statistics
+│   ├── schedule.html       # Match schedule
+│   ├── table.html          # Team standings
+│   └── teams.html          # Team list
 ├── img/                    # Images and assets
+├── js/
+│   ├── app.js              # Frontend logic
+│   ├── data.js             # Static data
+│   ├── navigation.js       # Navigation handler
+│   └── server.js           # Express backend
+├── json/
+│   ├── package.json        # Dependencies
+│   └── vercel.json         # Vercel config
 ├── Key-Visual-img/         # Tournament key visuals
-├── app.js                  # Frontend logic
-├── server.js               # Express backend
 ├── index.html              # Home page
-├── schedule.html           # Match schedule
-├── table.html              # Team standings
-├── teams.html              # Team list
-├── players.html            # Player statistics
-├── styles.css              # Custom styles
-├── data.js                 # Static data
-├── navigation.js           # Navigation handler
-└── package.json            # Dependencies
+└── README.md               # Documentation
 ```
 
 ## 🔑 API Endpoints
