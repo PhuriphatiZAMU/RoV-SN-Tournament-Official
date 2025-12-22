@@ -237,3 +237,26 @@ a {
     animation: scaleUp 0.4s ease-out forwards;
     opacity: 0;
 }
+/* Hide Scrollbar for Matchday Nav but allow scrolling */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* UEFA Table Styles */
+table th {
+    font-family: 'Oswald', sans-serif; /* Use heading font for strong appearance */
+    letter-spacing: 0.5px;
+}
+
+table td {
+    vertical-align: middle;
+}
+
+/* Row Hover Effect */
+tr.group:hover td {
+    color: #0B1120;
+}

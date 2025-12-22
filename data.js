@@ -1,5 +1,6 @@
 // --- Key Visual Data ---
 export const kvData = [
+    { year: "2023", theme: "Limitless Dream", image: "Key-Visual-img/RoV-SN-TOURNAMENT-2023.png" },
     { year: "2024", theme: "Change for Future", image: "Key-Visual-img/RoV-SN-TOURNAMENT-2024.png" },
     { year: "2025", theme: "Last Chance", image: "Key-Visual-img/RoV-SN-TOURNAMENT-2025.png" },
     { year: "2026", theme: "Echo of Destiny", image: "Key-Visual-img/RoV-SN-TOURNAMENT-2026.png" }

@@ -61,7 +61,7 @@ export function renderNewsCarousel() {
 
         // Slides
         const slide = document.createElement('div');
-        slide.className = `carousel-item ${isActive} h-[400px] md:h-[450px] cursor-pointer`;
+        slide.className = `carousel-item ${isActive} aspect-video cursor-pointer`;
         slide.onclick = () => openNews(news.id);
         
         slide.innerHTML = `
@@ -218,50 +218,95 @@ export function renderUpNext(schedule) {
     container.innerHTML = cardsHtml;
 }
 
+// Global variable to track selected matchday
+let currentSelectedDay = 1;
+
 export function renderSchedule(schedule) {
-    const container = document.getElementById('schedule-container');
-    if (!container) return;
+    const navContainer = document.getElementById('matchday-nav');
+    const matchContainer = document.getElementById('schedule-container');
+    if (!navContainer || !matchContainer) return;
     
-    container.innerHTML = '';
-    schedule.forEach((round, roundIdx) => {
-        container.innerHTML += `
-            <div class="bg-white p-4 rounded-xl text-sm font-bold text-primary-custom border-l-4 border-primary-custom shadow-sm flex items-center justify-between mt-6 animate-fade-in">
-                <span><i class="far fa-calendar-alt mr-2"></i> Match Day ${round.day} • ${round.type}</span>
-                <span class="text-gray-400 text-xs font-normal bg-gray-50 px-2 py-1 rounded border">BO3 Format</span>
-            </div>
+    // 1. Create Matchday Navigation (horizontal tab bar)
+    navContainer.innerHTML = '';
+    schedule.forEach((round, index) => {
+        const dayNum = round.day;
+        const isActive = dayNum === currentSelectedDay;
+        
+        // UEFA-style button (Dark blue when Active, light gray when Inactive)
+        const btnClass = isActive 
+            ? 'bg-[#0B1120] text-white shadow-lg scale-105' 
+            : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200';
+
+        const btn = document.createElement('button');
+        btn.className = `${btnClass} px-6 py-2 rounded-full font-heading font-bold transition-all duration-300 whitespace-nowrap text-sm flex flex-col items-center justify-center min-w-[100px]`;
+        btn.innerHTML = `
+            <span class="text-[10px] uppercase tracking-wider opacity-70">Matchday</span>
+            <span class="text-lg leading-none">${dayNum}</span>
         `;
-        round.matches.forEach((match, matchIdx) => {
-            // ตรวจสอบสถานะและสกอร์
-            const isCompleted = match.status === 'completed';
-            const team1Score = match.team1Score !== undefined ? match.team1Score : '-';
-            const team2Score = match.team2Score !== undefined ? match.team2Score : '-';
-            const scoreDisplay = isCompleted ? `${team1Score} - ${team2Score}` : 'VS';
-            const scoreClass = isCompleted ? 'bg-green-500 text-white' : 'bg-gray-300 text-white';
-            const statusBadge = isCompleted ? '<span class="text-xs text-green-600 font-semibold ml-2"><i class="fas fa-check-circle"></i> เสร็จสิ้น</span>' : '';
-            
-            // เช็คว่าทีมไหนชนะ
-            const team1Win = isCompleted && team1Score > team2Score;
-            const team2Win = isCompleted && team2Score > team1Score;
-            const team1Class = team1Win ? 'border-green-400 bg-green-50' : 'border-blue-100';
-            const team2Class = team2Win ? 'border-green-400 bg-green-50' : 'border-red-100';
-            
-            container.innerHTML += `
-                <div class="bg-white rounded-xl p-5 flex flex-col md:flex-row items-center justify-between border border-gray-100 card-shadow hover:border-primary-custom/30 transition mt-2 animate-fade-in ${isCompleted ? 'opacity-75' : ''}" style="animation-delay: ${(roundIdx * 0.1) + (matchIdx * 0.05)}s">
-                    <div class="flex items-center justify-center gap-4 w-full md:w-auto mb-4 md:mb-0 flex-grow">
-                        <div class="flex items-center gap-4 w-2/5 justify-end">
-                            <span class="font-bold text-lg text-gray-800 text-right md:truncate ${team1Win ? 'text-green-600' : ''}">${match.blue}</span>
-                            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex flex-shrink-0 items-center justify-center font-bold text-sm border-2 ${team1Class} shadow-sm">${match.blue.substring(0,2)}</div>
+        
+        btn.onclick = () => {
+            currentSelectedDay = dayNum;
+            renderSchedule(schedule);
+        };
+        navContainer.appendChild(btn);
+    });
+
+    // 2. Find data for selected day
+    const selectedRound = schedule.find(r => r.day === currentSelectedDay);
+    
+    // 3. Render Match List (UEFA-style - Clean List View)
+    matchContainer.innerHTML = '';
+    
+    // Header showing round type
+    matchContainer.innerHTML += `
+        <div class="flex items-center justify-between mb-4 px-2 animate-fade-in">
+            <h3 class="font-bold text-xl text-gray-800">${selectedRound.type}</h3>
+            <span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Bo3 Format</span>
+        </div>
+    `;
+
+    selectedRound.matches.forEach((match, idx) => {
+        const isCompleted = match.status === 'completed';
+        const team1Score = match.team1Score !== undefined ? match.team1Score : '-';
+        const team2Score = match.team2Score !== undefined ? match.team2Score : '-';
+        
+        // Check winner logic to add color
+        const team1Win = isCompleted && team1Score > team2Score;
+        const team2Win = isCompleted && team2Score > team1Score;
+
+        // UEFA-style layout: long row, clear logos, score in center
+        matchContainer.innerHTML += `
+            <div class="group bg-white rounded-lg border border-gray-200 p-4 hover:border-primary-custom hover:shadow-lg transition-all duration-300 animate-fade-in" style="animation-delay: ${idx * 0.05}s">
+                <div class="flex items-center justify-between">
+                    
+                    <div class="flex items-center gap-4 w-1/3">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-50 border p-1 flex items-center justify-center shadow-sm">
+                            <span class="font-bold text-gray-400 text-xs">${match.blue.substring(0,2)}</span>
                         </div>
-                        <div class="px-4 py-1 rounded-full text-xs font-bold ${scoreClass}">${scoreDisplay}</div>
-                        <div class="flex items-center gap-4 w-2/5">
-                            <div class="w-12 h-12 bg-red-50 text-red-600 rounded-full flex flex-shrink-0 items-center justify-center font-bold text-sm border-2 ${team2Class} shadow-sm">${match.red.substring(0,2)}</div>
-                            <span class="font-bold text-lg text-gray-800 md:truncate ${team2Win ? 'text-green-600' : ''}">${match.red}</span>
+                        <span class="font-bold text-gray-800 text-xs sm:text-sm md:text-base ${team1Win ? 'text-green-600' : ''}">${match.blue}</span>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center w-1/3">
+                        <div class="flex items-center gap-3 text-2xl font-heading font-bold text-gray-800">
+                            <span class="${team1Win ? 'text-gray-900' : 'text-gray-400'}">${team1Score}</span>
+                            <span class="text-xs text-gray-300 bg-gray-100 px-2 rounded-full">-</span>
+                            <span class="${team2Win ? 'text-gray-900' : 'text-gray-400'}">${team2Score}</span>
+                        </div>
+                        ${isCompleted 
+                            ? '<span class="text-[10px] text-green-600 font-medium mt-1">Full Time</span>' 
+                            : '<span class="text-[10px] text-primary-custom font-medium mt-1 border border-primary-custom/30 px-2 rounded-full">VS</span>'}
+                    </div>
+
+                    <div class="flex items-center gap-4 w-1/3 justify-end">
+                        <span class="font-bold text-gray-800 text-xs sm:text-sm md:text-base text-right ${team2Win ? 'text-green-600' : ''}">${match.red}</span>
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-50 border p-1 flex items-center justify-center shadow-sm">
+                            <span class="font-bold text-gray-400 text-xs">${match.red.substring(0,2)}</span>
                         </div>
                     </div>
-                    ${statusBadge}
+
                 </div>
-            `;
-        });
+            </div>
+        `;
     });
 }
 
@@ -270,21 +315,43 @@ export function renderTeams(potA, potB) {
     if (!container) return;
     
     container.innerHTML = '';
-    const allTeams = [...potA, ...potB].sort(); // Sort alphabetically for team page
+    const allTeams = [...potA, ...potB].sort(); 
     
     allTeams.forEach((team, idx) => {
-        // Determine Pot for badge
+        // Use first 2 letters for abbreviation
+        const shortName = team.substring(0, 2).toUpperCase();
+        
+        // Determine if team is in Pot A for badge display
         const isPotA = potA.includes(team);
-        const badgeColor = isPotA ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
-        const potName = isPotA ? 'POT A' : 'POT B';
+        const potBadge = isPotA 
+            ? '<span class="absolute top-3 right-3 bg-[#0B1120] text-white text-[10px] font-bold px-2 py-0.5 rounded">POT A</span>' 
+            : '<span class="absolute top-3 right-3 bg-gray-200 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded">POT B</span>';
 
+        // UEFA-style Club Card layout
         container.innerHTML += `
-            <div class="bg-white border border-gray-200 p-6 rounded-xl flex flex-col items-center justify-center card-shadow hover:border-primary-custom transition cursor-pointer group animate-scale-up" style="animation-delay: ${idx * 0.05}s">
-                <div class="w-20 h-20 bg-gray-50 rounded-full mb-4 group-hover:scale-110 transition duration-300 shadow-inner flex items-center justify-center border-2 border-gray-100">
-                    <span class="text-2xl font-bold text-gray-400 group-hover:text-primary-custom transition">${team.substring(0,1)}</span>
+            <div class="group relative bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer animate-scale-up mb-2" style="animation-delay: ${idx * 0.05}s">
+                
+                <div class="h-24 bg-gradient-to-r from-[#0B1120] to-[#15C8FF] relative overflow-hidden">
+                    <div class="absolute inset-0 bg-black/10"></div>
+                    <div class="absolute -bottom-6 -right-6 text-9xl text-white opacity-10 font-heading font-bold select-none leading-none">
+                        ${shortName}
+                    </div>
                 </div>
-                <span class="font-bold text-center text-sm text-gray-700 group-hover:text-primary-custom transition mb-2">${team}</span>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgeColor}">${potName}</span>
+
+                <div class="absolute top-12 left-1/2 transform -translate-x-1/2">
+                    <div class="w-20 h-20 bg-white rounded-full p-1 shadow-lg group-hover:scale-110 transition duration-300">
+                        <div class="w-full h-full bg-gray-50 rounded-full flex items-center justify-center border border-gray-100">
+                            <span class="text-2xl font-heading font-bold text-gray-400 group-hover:text-primary-custom transition">${shortName}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-12 pb-6 px-4 text-center mt-2">
+                    <h3 class="font-bold text-gray-800 text-sm sm:text-base md:text-lg lg:text-xl mb-1 group-hover:text-primary-custom transition">${team}</h3>
+                    <p class="text-xs text-gray-400 mb-4">RoV SN Tournament 2026</p>
+                </div>
+                
+                ${potBadge}
             </div>
         `;
     });
@@ -296,34 +363,79 @@ export function renderStandings(teams) {
     
     container.innerHTML = '';
     
-    // Sort teams by points (descending), then by diff
-    const sortedTeams = [...teams].sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        return b.diff - a.diff;
+    // 1. Calculate additional data (if Backend doesn't send it)
+    const processedTeams = teams.map(team => {
+        // Calculate games from matchWins/matchLosses
+        const gamesWon = team.matchWins || 0;
+        const gamesLost = team.matchLosses || 0;
+        
+        return {
+            ...team,
+            matchPlayed: (team.wins || 0) + (team.losses || 0), // P
+            gameDiff: team.diff || 0 // GD
+        };
+    });
+
+    // 2. Sorting Logic (Tie-breakers)
+    // 1. Points -> 2. Game Difference -> 3. Total Wins
+    processedTeams.sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points; // Points
+        if (b.gameDiff !== a.gameDiff) return b.gameDiff - a.gameDiff; // Game difference
+        if (b.wins !== a.wins) return b.wins - a.wins; // Match wins
+        return 0; // Random Draw (if all equal)
     });
     
-    sortedTeams.forEach((team, index) => {
-        // Determine rank badge color
-        let rankClass = 'text-gray-400';
-        if (index === 0) rankClass = 'text-yellow-500'; // 1st place
-        else if (index === 1) rankClass = 'text-gray-400'; // 2nd place
-        else if (index === 2) rankClass = 'text-orange-400'; // 3rd place
+    // 3. Render Rows
+    processedTeams.forEach((team, index) => {
+        const rank = index + 1;
+        const isQualified = rank <= 4; // Top 4 advance
         
-        const teamInitials = team.team_name ? team.team_name.substring(0, 2).toUpperCase() : 'T';
+        // Style for qualified teams (left border)
+        const rowClass = isQualified 
+            ? 'bg-blue-50/30 hover:bg-blue-50 border-l-4 border-l-primary-custom' 
+            : 'hover:bg-gray-50 border-l-4 border-l-transparent';
+            
+        const rankClass = isQualified ? 'text-[#0B1120] font-bold' : 'text-gray-500';
         
+        // Mock Form (last 5 matches - if no data, use random or leave blank)
+        // W = Win (Green), L = Lose (Red)
+        const formHtml = `
+            <div class="flex justify-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+            </div>
+        `;
+
+        // Create HTML
         container.innerHTML += `
-            <tr class="hover:bg-blue-50/50 transition group border-b border-gray-100">
-                <td class="p-4 text-center font-bold text-lg ${rankClass}">${index + 1}</td>
+            <tr class="${rowClass} transition-colors duration-200 group">
+                <td class="p-4 text-center ${rankClass}">${rank}</td>
                 <td class="p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">${teamInitials}</div>
-                        <span class="font-bold text-gray-700 group-hover:text-primary-custom transition">${team.team_name}</span>
+                        <div class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm">
+                            <span class="text-[10px] font-bold text-gray-400">${team.teamName ? team.teamName.substring(0,2).toUpperCase() : 'T'}</span>
+                        </div>
+                        <span class="font-bold text-gray-800 group-hover:text-primary-custom transition">${team.teamName}</span>
                     </div>
                 </td>
-                <td class="p-4 text-center font-mono font-medium text-gray-600">${team.match_wl}</td>
-                <td class="p-4 text-center font-mono text-gray-500">${team.game_wl}</td>
-                <td class="p-4 text-center font-mono text-gray-400">${team.diff}</td>
-                <td class="p-4 text-center font-bold text-xl text-gray-800">${team.points}</td>
+                <td class="p-4 text-center text-gray-600">${team.matchPlayed || 0}</td>
+                <td class="p-4 text-center text-gray-800 font-semibold">${team.wins || 0}</td>
+                <td class="p-4 text-center text-gray-500">${team.losses || 0}</td>
+                <td class="p-4 text-center font-mono text-xs text-gray-500">
+                    <span class="text-gray-800">${team.matchWins || 0}</span> : <span>${team.matchLosses || 0}</span>
+                </td>
+                <td class="p-4 text-center font-bold ${team.gameDiff > 0 ? 'text-green-600' : (team.gameDiff < 0 ? 'text-red-500' : 'text-gray-400')}">
+                    ${team.gameDiff > 0 ? '+' : ''}${team.gameDiff || 0}
+                </td>
+                <td class="p-4 text-center font-bold text-lg text-[#0B1120] bg-gray-50/50 group-hover:bg-white transition rounded-lg">
+                    ${team.points || 0}
+                </td>
+                <td class="p-4 text-center hidden md:table-cell">
+                    ${formHtml}
+                </td>
             </tr>
         `;
     });
