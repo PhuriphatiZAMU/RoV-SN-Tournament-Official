@@ -113,7 +113,7 @@ export const newsData = [
             </div>
             
             <div class="mb-4 flex items-start gap-3">
-                <img src="img/Reinforcement-Skill.png" alt="Reinforcement" class="w-16 h-16 rounded-lg border-2 border-yellow-500 shadow-md object-cover">
+                <img src="/img/Reinforcement-Skill.png" alt="Reinforcement" class="w-16 h-16 rounded-lg border-2 border-yellow-500 shadow-md object-cover">
                 <div>
                     <p class="mb-1"><strong class="text-yellow-600">Reinforcement Skill</strong></p>
                     <p class="text-sm">• พลังชีวิตของ Reinforcement：3600 → 3250</p>
