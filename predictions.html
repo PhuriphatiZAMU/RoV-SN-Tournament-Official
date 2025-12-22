@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Match Predictions | ROV SN TOURNAMENT 2026</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="img/RoV Logo.png" type="image/png">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link href="styles.css" rel="stylesheet">
+
+    <style>
+        .prediction-card {
+            background: linear-gradient(135deg, #0B1120 0%, #1a2744 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .prediction-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(21, 200, 255, 0.2);
+        }
+        .team-side {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .team-blue { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, transparent 100%); }
+        .team-red { background: linear-gradient(135deg, transparent 0%, rgba(239, 68, 68, 0.2) 100%); }
+        .vs-badge {
+            background: linear-gradient(135deg, #15C8FF, #00a8e8);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            box-shadow: 0 0 30px rgba(21, 200, 255, 0.5);
+            z-index: 10;
+        }
+        .prob-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #1f2937;
+            overflow: hidden;
+        }
+        .prob-fill-blue {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+        .prob-fill-red {
+            height: 100%;
+            background: linear-gradient(90deg, #f87171, #ef4444);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+        .confidence-ring {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .confidence-ring::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            padding: 4px;
+            background: conic-gradient(#15C8FF var(--confidence), #1f2937 0);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+        .winner-badge {
+            background: linear-gradient(135deg, #10b981, #059669);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .insight-box {
+            background: rgba(21, 200, 255, 0.1);
+            border-left: 4px solid #15C8FF;
+            border-radius: 8px;
+            padding: 16px;
+            white-space: pre-line;
+        }
+        .form-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .form-w { background: #10b981; color: white; }
+        .form-l { background: #ef4444; color: white; }
+        .form-empty { background: #374151; color: #9ca3af; }
+        .day-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .day-btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            background: #1f2937;
+            color: #9ca3af;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .day-btn:hover {
+            background: #374151;
+            color: white;
+        }
+        .day-btn.active {
+            background: linear-gradient(135deg, #15C8FF, #00a8e8);
+            color: white;
+            border-color: #15C8FF;
+        }
+        .ai-badge {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(21, 200, 255, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(21, 200, 255, 0.6); }
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-gray-100">
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-[#E8F7FF] z-[100] flex flex-col items-center justify-center transition-opacity duration-700 ease-out">
+        <div class="relative flex flex-col items-center">
+            <div class="w-40 h-40 md:w-56 md:h-56 bg-white rounded-full shadow-2xl flex items-center justify-center border-4 border-[#15C8FF] animate-pulse-logo mb-6 overflow-hidden p-2">
+                <img src="img/RoV Logo.png" class="w-full h-full object-cover rounded-full" alt="RoV Logo">
+            </div>
+            <div class="mt-4 flex space-x-2 animate-bounce">
+                <div class="w-3 h-3 bg-[#15C8FF] rounded-full"></div>
+                <div class="w-3 h-3 bg-[#15C8FF] rounded-full animation-delay-200"></div>
+                <div class="w-3 h-3 bg-[#15C8FF] rounded-full animation-delay-400"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-[#0B1120] border-b-4 border-primary-custom shadow-lg relative">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border-2 border-primary-custom shadow-[0_0_10px_rgba(21,200,255,0.5)]">
+                    <i class="fas fa-trophy text-primary-custom text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-xl font-bold tracking-wide leading-none text-white m-0">ROV SN <span class="text-primary-custom">2026</span></h1>
+                    <p class="text-[10px] text-gray-400 tracking-wider uppercase m-0">Official Tournament Hub</p>
+                </div>
+            </div>
+
+            <!-- Menu (Desktop) -->
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-wide">
+                <a href="index.html" class="nav-link-custom">หน้าหลัก</a>
+                <a href="schedule.html" class="nav-link-custom">ตารางแข่ง</a>
+                <a href="table.html" class="nav-link-custom">ตารางคะแนน</a>
+                <a href="teams.html" class="nav-link-custom">ทีมแข่ง</a>
+                <a href="players.html" class="nav-link-custom">สถิติผู้เล่น</a>
+                <a href="predictions.html" class="nav-link-custom active">
+                    <i class="fas fa-robot mr-1"></i> AI Predictions
+                </a>
+            </div>
+
+            <!-- Mobile Menu Btn -->
+            <button class="md:hidden text-white text-xl bg-transparent border-0" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobile-menu" class="md:hidden absolute top-16 left-0 right-0 bg-[#0B1120] border-b-2 border-primary-custom shadow-xl z-40 p-4 flex flex-col gap-4 transition-all duration-300 ease-in-out opacity-0 -translate-y-4 pointer-events-none invisible origin-top">
+            <a href="index.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">หน้าหลัก</a>
+            <a href="schedule.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ตารางแข่ง</a>
+            <a href="table.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ตารางคะแนน</a>
+            <a href="teams.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">ทีมแข่ง</a>
+            <a href="players.html" class="text-left text-gray-300 hover:text-white font-medium py-2 border-b border-gray-800 w-full">สถิติผู้เล่น</a>
+            <a href="predictions.html" class="text-left text-white font-medium py-2 w-full">
+                <i class="fas fa-robot mr-1"></i> AI Predictions
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+                <h2 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-heading flex items-center gap-3 text-gray-800 m-0">
+                    <span class="bg-primary-custom w-2 h-8 rounded-full"></span> 
+                    AI Match Predictions
+                    <span class="ai-badge pulse-glow">
+                        <i class="fas fa-brain"></i> AI Powered
+                    </span>
+                </h2>
+                <p class="text-gray-500 mt-2 ml-5">ระบบวิเคราะห์และทำนายผลการแข่งขันด้วย AI</p>
+            </div>
+        </div>
+
+        <!-- Day Selector -->
+        <div class="bg-white rounded-xl p-4 shadow-md mb-6">
+            <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-calendar-alt text-primary-custom mr-2"></i>เลือกวันแข่งขัน</h3>
+            <div class="day-selector" id="daySelector">
+                <!-- Days will be dynamically added -->
+            </div>
+        </div>
+
+        <!-- Predictions Container -->
+        <div id="predictionsContainer" class="space-y-6">
+            <!-- Loading state -->
+            <div class="text-center py-20">
+                <i class="fas fa-spinner fa-spin text-4xl text-primary-custom mb-4"></i>
+                <p class="text-gray-500">กำลังวิเคราะห์ข้อมูล...</p>
+            </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-sm">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <strong>ข้อจำกัดความรับผิดชอบ:</strong> การทำนายนี้อิงจากสถิติและฟอร์มการเล่นเท่านั้น ไม่สามารถรับประกันผลการแข่งขันจริงได้ กรุณาใช้เป็นข้อมูลอ้างอิงเท่านั้น
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#0B1120] border-t-4 border-primary-custom py-12 mt-12">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg shadow-cyan-500/50">
+                        <i class="fas fa-trophy text-primary-custom text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-heading text-2xl font-bold text-white tracking-wide m-0">ROV SN TOURNAMENT</h2>
+                        <p class="text-gray-400 text-sm m-0">The Ultimate Mobile MOBA Competition</p>
+                    </div>
+                </div>
+                <div class="flex gap-6">
+                    <a href="https://www.facebook.com/profile.php?id=61573326877157" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:bg-primary-custom hover:text-white transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.instagram.com/sn.ac.th" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:bg-primary-custom hover:text-white transition"><i class="fab fa-instagram"></i></a>
+                    <a href="https://discord.gg/eAjAAM58wd" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:bg-primary-custom hover:text-white transition"><i class="fab fa-discord"></i></a>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
+                © 2026 ROV SN Tournament. All Rights Reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // API Base URL
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3001/api'
+            : 'https://rov-sn-tournament-api.vercel.app/api';
+
+        let currentDay = 2;
+        const totalDays = 15; // Total match days in tournament
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hide loading screen
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loadingScreen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => loadingScreen.style.display = 'none', 700);
+                }
+            }, 500);
+
+            // Generate day buttons
+            generateDaySelector();
+            
+            // Load predictions for default day
+            loadPredictions(currentDay);
+        });
+
+        function generateDaySelector() {
+            const container = document.getElementById('daySelector');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= totalDays; i++) {
+                const btn = document.createElement('button');
+                btn.className = `day-btn ${i === currentDay ? 'active' : ''}`;
+                btn.textContent = `Day ${i}`;
+                btn.onclick = () => selectDay(i);
+                container.appendChild(btn);
+            }
+        }
+
+        function selectDay(day) {
+            currentDay = day;
+            
+            // Update active button
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            loadPredictions(day);
+        }
+
+        async function loadPredictions(day) {
+            const container = document.getElementById('predictionsContainer');
+            container.innerHTML = `
+                <div class="text-center py-20">
+                    <i class="fas fa-brain fa-spin text-4xl text-primary-custom mb-4"></i>
+                    <p class="text-gray-500">AI กำลังวิเคราะห์แมตช์ Day ${day}...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/predictions?day=${day}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch predictions');
+                }
+                
+                const data = await response.json();
+                renderPredictions(data);
+                
+            } catch (error) {
+                console.error('Error loading predictions:', error);
+                container.innerHTML = `
+                    <div class="text-center py-20">
+                        <i class="fas fa-exclamation-circle text-4xl text-red-400 mb-4"></i>
+                        <p class="text-gray-500">ไม่สามารถโหลดข้อมูลได้</p>
+                        <p class="text-gray-400 text-sm mt-2">Day ${day} อาจยังไม่มีข้อมูลการแข่งขัน</p>
+                        <button onclick="loadPredictions(${day})" class="mt-4 px-4 py-2 bg-primary-custom text-white rounded-lg hover:bg-cyan-600 transition">
+                            <i class="fas fa-redo mr-2"></i>ลองใหม่
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderPredictions(data) {
+            const container = document.getElementById('predictionsContainer');
+            
+            if (!data.predictions || data.predictions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20">
+                        <i class="fas fa-calendar-times text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-500">ไม่มีแมตช์ในวันนี้</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="bg-white rounded-xl p-4 shadow-md mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-lg">
+                                <i class="fas fa-calendar text-primary-custom mr-2"></i>
+                                Day ${data.day} - ${data.type}
+                            </h3>
+                            <p class="text-gray-500 text-sm mt-1">${data.totalMatches} แมตช์</p>
+                        </div>
+                        <div class="text-xs text-gray-400">
+                            <i class="fas fa-clock mr-1"></i>
+                            อัปเดต: ${new Date(data.generatedAt).toLocaleString('th-TH')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            data.predictions.forEach((pred, index) => {
+                const blueProb = pred.prediction.probabilities[pred.match.blue];
+                const redProb = pred.prediction.probabilities[pred.match.red];
+                const isBlueWinner = pred.prediction.winner === pred.match.blue;
+                
+                html += `
+                    <div class="prediction-card">
+                        <!-- Match Header -->
+                        <div class="bg-gradient-to-r from-blue-600/20 via-[#0B1120] to-red-600/20 px-6 py-3 flex justify-between items-center">
+                            <span class="text-gray-400 text-sm">แมตช์ที่ ${index + 1}</span>
+                            <span class="text-gray-400 text-sm">Bo3</span>
+                        </div>
+                        
+                        <!-- Teams Container -->
+                        <div class="flex flex-col md:flex-row">
+                            <!-- Blue Team -->
+                            <div class="team-side team-blue ${isBlueWinner ? 'border-l-4 border-green-500' : ''}">
+                                <div class="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-3">
+                                    <span class="text-2xl font-bold text-blue-400">
+                                        ${pred.match.blue.substring(0, 2).toUpperCase()}
+                                    </span>
+                                </div>
+                                <h4 class="text-white font-bold text-center text-lg mb-2">${pred.match.blue}</h4>
+                                ${isBlueWinner ? '<span class="winner-badge"><i class="fas fa-crown"></i> ทำนาย: ชนะ</span>' : ''}
+                                
+                                <!-- Stats -->
+                                <div class="mt-4 text-center">
+                                    <div class="text-gray-400 text-sm">สถิติ: ${pred.teamStats.blue.record}</div>
+                                    <div class="text-gray-400 text-sm">GD: ${pred.teamStats.blue.gameDiff > 0 ? '+' : ''}${pred.teamStats.blue.gameDiff}</div>
+                                    <div class="flex justify-center gap-1 mt-2">
+                                        ${renderFormDots(pred.teamStats.blue.form)}
+                                    </div>
+                                </div>
+                                
+                                <!-- Probability -->
+                                <div class="mt-4 w-full max-w-[200px]">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-blue-400">โอกาสชนะ</span>
+                                        <span class="text-white font-bold">${blueProb}%</span>
+                                    </div>
+                                    <div class="prob-bar">
+                                        <div class="prob-fill-blue" style="width: ${blueProb}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- VS Badge -->
+                            <div class="flex items-center justify-center py-4 md:py-0 md:-mx-8 z-10">
+                                <div class="vs-badge">VS</div>
+                            </div>
+                            
+                            <!-- Red Team -->
+                            <div class="team-side team-red ${!isBlueWinner ? 'border-r-4 border-green-500' : ''}">
+                                <div class="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-3">
+                                    <span class="text-2xl font-bold text-red-400">
+                                        ${pred.match.red.substring(0, 2).toUpperCase()}
+                                    </span>
+                                </div>
+                                <h4 class="text-white font-bold text-center text-lg mb-2">${pred.match.red}</h4>
+                                ${!isBlueWinner ? '<span class="winner-badge"><i class="fas fa-crown"></i> ทำนาย: ชนะ</span>' : ''}
+                                
+                                <!-- Stats -->
+                                <div class="mt-4 text-center">
+                                    <div class="text-gray-400 text-sm">สถิติ: ${pred.teamStats.red.record}</div>
+                                    <div class="text-gray-400 text-sm">GD: ${pred.teamStats.red.gameDiff > 0 ? '+' : ''}${pred.teamStats.red.gameDiff}</div>
+                                    <div class="flex justify-center gap-1 mt-2">
+                                        ${renderFormDots(pred.teamStats.red.form)}
+                                    </div>
+                                </div>
+                                
+                                <!-- Probability -->
+                                <div class="mt-4 w-full max-w-[200px]">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-red-400">โอกาสชนะ</span>
+                                        <span class="text-white font-bold">${redProb}%</span>
+                                    </div>
+                                    <div class="prob-bar">
+                                        <div class="prob-fill-red" style="width: ${redProb}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Prediction Summary -->
+                        <div class="bg-[#0B1120] border-t border-gray-700 p-6">
+                            <div class="flex flex-col md:flex-row gap-6">
+                                <!-- Confidence Ring -->
+                                <div class="flex flex-col items-center">
+                                    <div class="confidence-ring" style="--confidence: ${pred.prediction.confidence}%">
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-white">${pred.prediction.confidence}%</div>
+                                            <div class="text-xs text-gray-400">ความมั่นใจ</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 text-center">
+                                        <div class="text-gray-400 text-sm">คะแนนที่ทำนาย</div>
+                                        <div class="text-white font-bold text-xl">${pred.prediction.predictedScore}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- AI Insight -->
+                                <div class="flex-1">
+                                    <h5 class="text-gray-400 text-sm mb-2">
+                                        <i class="fas fa-brain text-purple-400 mr-1"></i> AI Analysis
+                                    </h5>
+                                    <div class="insight-box text-gray-300 text-sm">
+                                        ${pred.analysis.insight}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderFormDots(form) {
+            const dots = [];
+            const maxDots = 5;
+            
+            // Fill with form data
+            for (let i = 0; i < maxDots; i++) {
+                if (form && form[i]) {
+                    const result = form[i];
+                    if (result === 'W') {
+                        dots.push('<span class="form-dot form-w">W</span>');
+                    } else if (result === 'L') {
+                        dots.push('<span class="form-dot form-l">L</span>');
+                    } else {
+                        dots.push('<span class="form-dot form-empty">-</span>');
+                    }
+                } else {
+                    dots.push('<span class="form-dot form-empty">-</span>');
+                }
+            }
+            
+            return dots.join('');
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu.classList.contains('opacity-0')) {
+                menu.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none', 'invisible');
+                menu.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto', 'visible');
+            } else {
+                menu.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none', 'invisible');
+                menu.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto', 'visible');
+            }
+        }
+    </script>
+</body>
+</html>

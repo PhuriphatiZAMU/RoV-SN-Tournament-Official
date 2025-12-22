@@ -637,6 +637,236 @@ app.delete('/api/players/:id', async (req, res) => {
     }
 });
 
+// ========================================
+// AI MATCH PREDICTION API
+// ========================================
+
+// Helper: Calculate team strength score
+const calculateTeamStrength = (team) => {
+    const winRate = team.matchesPlayed > 0 
+        ? (team.matchWins / team.matchesPlayed) * 100 
+        : 50;
+    const gameWinRate = (team.gameWins + team.gameLosses) > 0
+        ? (team.gameWins / (team.gameWins + team.gameLosses)) * 100
+        : 50;
+    const formScore = team.form 
+        ? team.form.slice(-5).reduce((acc, f) => acc + (f === 'W' ? 20 : 0), 0)
+        : 50;
+    
+    // Weighted score: 40% win rate, 30% game win rate, 30% recent form
+    return (winRate * 0.4) + (gameWinRate * 0.3) + (formScore * 0.3);
+};
+
+// Helper: Generate AI insight text
+const generateInsight = (team1, team2, team1Strength, team2Strength, prediction) => {
+    const diff = Math.abs(team1Strength - team2Strength);
+    const favorite = team1Strength > team2Strength ? team1.teamName : team2.teamName;
+    const underdog = team1Strength > team2Strength ? team2.teamName : team1.teamName;
+    
+    let insight = '';
+    
+    if (diff < 10) {
+        insight = `🔥 แมตช์สูสี! ทั้ง ${team1.teamName} และ ${team2.teamName} มีความแข็งแกร่งใกล้เคียงกัน ผลลัพธ์ยากต่อการคาดเดา`;
+    } else if (diff < 25) {
+        insight = `⚔️ ${favorite} มีความได้เปรียบเล็กน้อย แต่ ${underdog} ยังมีโอกาสพลิกสถานการณ์ได้`;
+    } else {
+        insight = `🏆 ${favorite} เป็นตัวเต็งอย่างชัดเจน ด้วยฟอร์มและสถิติที่เหนือกว่า`;
+    }
+    
+    // Add form analysis
+    const team1Form = team1.form?.slice(-3).join('') || 'N/A';
+    const team2Form = team2.form?.slice(-3).join('') || 'N/A';
+    insight += `\n\n📊 ฟอร์ม 3 นัดหลังสุด:\n• ${team1.teamName}: ${team1Form}\n• ${team2.teamName}: ${team2Form}`;
+    
+    // Add key stats
+    insight += `\n\n📈 สถิติสำคัญ:`;
+    insight += `\n• ${team1.teamName}: ${team1.matchWins}W-${team1.matchLosses}L (GD: ${team1.gameDiff > 0 ? '+' : ''}${team1.gameDiff})`;
+    insight += `\n• ${team2.teamName}: ${team2.matchWins}W-${team2.matchLosses}L (GD: ${team2.gameDiff > 0 ? '+' : ''}${team2.gameDiff})`;
+    
+    return insight;
+};
+
+// GET /api/predictions - Get predictions for upcoming matches
+app.get('/api/predictions', async (req, res) => {
+    try {
+        // Get all teams data
+        const teams = await tableCollection.find({}).toArray();
+        const teamsMap = {};
+        teams.forEach(team => {
+            teamsMap[team.teamName] = team;
+        });
+        
+        // Get schedule
+        const scheduleDoc = await schedulesCollection.findOne({}, { sort: { createdAt: -1 } });
+        if (!scheduleDoc || !scheduleDoc.schedule) {
+            return res.status(404).json({ error: 'No schedule found' });
+        }
+        
+        // Find next day to predict (first day with unplayed matches)
+        const day = parseInt(req.query.day) || 2; // Default to day 2
+        const daySchedule = scheduleDoc.schedule.find(d => d.day === day);
+        
+        if (!daySchedule) {
+            return res.status(404).json({ error: `No matches found for day ${day}` });
+        }
+        
+        // Generate predictions for each match
+        const predictions = daySchedule.matches.map(match => {
+            const team1 = teamsMap[match.blue] || { 
+                teamName: match.blue, matchWins: 0, matchLosses: 0, 
+                gameWins: 0, gameLosses: 0, gameDiff: 0, matchesPlayed: 0, form: []
+            };
+            const team2 = teamsMap[match.red] || { 
+                teamName: match.red, matchWins: 0, matchLosses: 0, 
+                gameWins: 0, gameLosses: 0, gameDiff: 0, matchesPlayed: 0, form: []
+            };
+            
+            const team1Strength = calculateTeamStrength(team1);
+            const team2Strength = calculateTeamStrength(team2);
+            const total = team1Strength + team2Strength;
+            
+            const team1WinProb = Math.round((team1Strength / total) * 100);
+            const team2WinProb = 100 - team1WinProb;
+            
+            // Predicted winner
+            const predictedWinner = team1WinProb > team2WinProb ? match.blue : match.red;
+            const confidence = Math.max(team1WinProb, team2WinProb);
+            
+            // Predicted score (Bo3)
+            let predictedScore;
+            if (confidence > 70) {
+                predictedScore = '2-0';
+            } else if (confidence > 55) {
+                predictedScore = '2-1';
+            } else {
+                predictedScore = '2-1'; // Close match
+            }
+            
+            return {
+                match: {
+                    blue: match.blue,
+                    red: match.red
+                },
+                prediction: {
+                    winner: predictedWinner,
+                    confidence: confidence,
+                    predictedScore: predictedScore,
+                    probabilities: {
+                        [match.blue]: team1WinProb,
+                        [match.red]: team2WinProb
+                    }
+                },
+                analysis: {
+                    blueStrength: Math.round(team1Strength),
+                    redStrength: Math.round(team2Strength),
+                    insight: generateInsight(team1, team2, team1Strength, team2Strength, predictedWinner)
+                },
+                teamStats: {
+                    blue: {
+                        rank: team1.rank || '-',
+                        form: team1.form || [],
+                        record: `${team1.matchWins}W-${team1.matchLosses}L`,
+                        gameDiff: team1.gameDiff || 0
+                    },
+                    red: {
+                        rank: team2.rank || '-',
+                        form: team2.form || [],
+                        record: `${team2.matchWins}W-${team2.matchLosses}L`,
+                        gameDiff: team2.gameDiff || 0
+                    }
+                }
+            };
+        });
+        
+        res.status(200).json({
+            day: day,
+            type: daySchedule.type,
+            totalMatches: predictions.length,
+            predictions: predictions,
+            generatedAt: new Date().toISOString(),
+            disclaimer: '⚠️ การทำนายนี้อิงจากสถิติและฟอร์มเท่านั้น ผลการแข่งขันจริงอาจแตกต่างได้'
+        });
+        
+    } catch (error) {
+        console.error('Error generating predictions:', error);
+        res.status(500).json({ error: 'Failed to generate predictions' });
+    }
+});
+
+// GET /api/predictions/match - Predict a specific match
+app.get('/api/predictions/match', async (req, res) => {
+    try {
+        const { team1, team2 } = req.query;
+        
+        if (!team1 || !team2) {
+            return res.status(400).json({ error: 'Please provide team1 and team2 query parameters' });
+        }
+        
+        // Get teams data
+        const teams = await tableCollection.find({
+            teamName: { $in: [team1, team2] }
+        }).toArray();
+        
+        const teamsMap = {};
+        teams.forEach(team => {
+            teamsMap[team.teamName] = team;
+        });
+        
+        const teamData1 = teamsMap[team1] || { 
+            teamName: team1, matchWins: 0, matchLosses: 0, 
+            gameWins: 0, gameLosses: 0, gameDiff: 0, matchesPlayed: 0, form: []
+        };
+        const teamData2 = teamsMap[team2] || { 
+            teamName: team2, matchWins: 0, matchLosses: 0, 
+            gameWins: 0, gameLosses: 0, gameDiff: 0, matchesPlayed: 0, form: []
+        };
+        
+        const strength1 = calculateTeamStrength(teamData1);
+        const strength2 = calculateTeamStrength(teamData2);
+        const total = strength1 + strength2;
+        
+        const prob1 = Math.round((strength1 / total) * 100);
+        const prob2 = 100 - prob1;
+        
+        const predictedWinner = prob1 > prob2 ? team1 : team2;
+        const confidence = Math.max(prob1, prob2);
+        
+        res.status(200).json({
+            match: { blue: team1, red: team2 },
+            prediction: {
+                winner: predictedWinner,
+                confidence: confidence,
+                probabilities: {
+                    [team1]: prob1,
+                    [team2]: prob2
+                }
+            },
+            analysis: {
+                insight: generateInsight(teamData1, teamData2, strength1, strength2, predictedWinner)
+            },
+            teamStats: {
+                [team1]: {
+                    rank: teamData1.rank || '-',
+                    form: teamData1.form || [],
+                    record: `${teamData1.matchWins}W-${teamData1.matchLosses}L`,
+                    points: teamData1.points || 0
+                },
+                [team2]: {
+                    rank: teamData2.rank || '-',
+                    form: teamData2.form || [],
+                    record: `${teamData2.matchWins}W-${teamData2.matchLosses}L`,
+                    points: teamData2.points || 0
+                }
+            },
+            generatedAt: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Error predicting match:', error);
+        res.status(500).json({ error: 'Failed to predict match' });
+    }
+});
+
 // Start Server
 const startServer = async () => {
     await connectDB();
