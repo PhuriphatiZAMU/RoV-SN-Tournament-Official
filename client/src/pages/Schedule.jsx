@@ -69,14 +69,18 @@ const Schedule = () => {
             </div>
 
             <div className="schedule-list">
-              {scheduleData[selectedDay]?.map((match, index) => (
-                <MatchCard key={index} match={match} />
-              ))}
+              {scheduleData[selectedDay]?.length === 0 ? (
+                <div className="text-center text-gray-500 p-4">ยังไม่มีข้อมูลการแข่งขัน</div>
+              ) : (
+                scheduleData[selectedDay]?.map((match, index) => (
+                  <MatchCard key={index} match={match} />
+                ))
+              )}
             </div>
           </>
         )}
-         {!loading && !error && days.length === 0 && (
-            <div className="text-center text-gray-500 p-4">No schedule available.</div>
+        {!loading && !error && days.length === 0 && (
+          <div className="text-center text-gray-500 p-4">ยังไม่มีข้อมูลการแข่งขัน</div>
         )}
       </div>
     </div>

@@ -1,13 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// CORS Configuration - Allow GitHub Pages and localhost
+// CORS Configuration
 const corsOptions = {
     origin: [
         'http://localhost:3000',
@@ -20,66 +20,89 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 
-// Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// MongoDB Connection
-let db;
-let schedulesCollection;
-let tableCollection;
-let playersCollection;
-let scheduleResultsCollection;
-let fixturesCollection;
-let playerStatsCollection;
-
-const connectDB = async () => {
-    try {
-        const client = new MongoClient(process.env.MONGODB_URI);
-        await client.connect();
-        console.log('✅ Connected to MongoDB Atlas');
-        
-        db = client.db('rov_sn_tournament_2026');
-        schedulesCollection = db.collection('schedules');
-        tableCollection = db.collection('table');
-        playersCollection = db.collection('players');
-        scheduleResultsCollection = db.collection('schedule_results');
-        fixturesCollection = db.collection('fixtures');
-        playerStatsCollection = db.collection('player_stats');
-        
-        console.log('📦 Database:', db.databaseName);
-    } catch (error) {
-        console.error('❌ MongoDB Connection Error:', error);
+// --- MongoDB Connection ---
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('✅ Connected to MongoDB Atlas'))
+    .catch((err) => {
+        console.error('❌ MongoDB Connection Error:', err);
         process.exit(1);
-    }
-};
+    });
 
-// Routes
+// Example Mongoose models (replace with your actual schemas)
+const Schedule = mongoose.model('Schedule', new mongoose.Schema({}, { strict: false }), 'schedules');
+const Table = mongoose.model('Table', new mongoose.Schema({}, { strict: false }), 'table');
+const Player = mongoose.model('Player', new mongoose.Schema({}, { strict: false }), 'players');
+const Fixture = mongoose.model('Fixture', new mongoose.Schema({}, { strict: false }), 'fixtures');
+
+// --- Serve Images ---
+app.use('/img', express.static(path.join(__dirname, '../img')));
+
+// --- API Routes ---
 
 // Health Check
 app.get('/api/health', (req, res) => {
-    res.status(200).json( {
+    res.status(200).json({
         status: 'ok',
         message: 'Server is running',
-        database: db ? 'connected' : 'disconnected'
+        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
     });
 });
 
-// ==================== FIXTURES & RESULTS ====================
+// Schedules
+app.get('/api/schedules', async (req, res) => {
+    try {
+        const schedules = await Schedule.find({}).lean();
+        res.json(schedules.length ? schedules : []);
+    } catch (err) {
+        console.error('Error fetching schedules:', err);
+        res.json([]);
+    }
+});
 
-// Get All Fixtures
+// Standings/Table
+app.get('/api/table/latest', async (req, res) => {
+    try {
+        const table = await Table.find({}).lean();
+        res.json(table.length ? table : []);
+    } catch (err) {
+        console.error('Error fetching table:', err);
+        res.json([]);
+    }
+});
+
+// Players
+app.get('/api/player-stats/totals', async (req, res) => {
+    try {
+        const players = await Player.find({}).lean();
+        res.json(players.length ? players : []);
+    } catch (err) {
+        console.error('Error fetching players:', err);
+        res.json([]);
+    }
+});
+
+// Fixtures
 app.get('/api/fixtures', async (req, res) => {
     try {
-        const fixtures = await fixturesCollection
-            .find({})
-            .sort({ matchDay: 1, matchNo: 1 })
-            .toArray();
-        
-        res.status(200).json(fixtures);
+        const fixtures = await Fixture.find({}).sort({ matchDay: 1, matchNo: 1 }).lean();
+        res.status(200).json(fixtures.length ? fixtures : []);
     } catch (error) {
         console.error('Error fetching fixtures:', error);
-        res.status(500).json({ error: 'Failed to fetch fixtures' });
+        res.json([]);
     }
+});
+
+// --- Serve React Build (after API routes) ---
+app.use(express.static(path.join(__dirname, '../client/dist')));
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
 });
 
 // Get Fixtures by Day

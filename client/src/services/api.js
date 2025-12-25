@@ -1,6 +1,5 @@
 // src/services/api.js
 import axios from 'axios';
-import { SCHEDULE_DATA } from '../data/mockData'; // For fetchUpcomingMatches fallback
 
 // The vite.config.js proxy will handle redirecting /api requests to http://localhost:3001
 const API_BASE_URL = '/api';
@@ -17,22 +16,14 @@ const apiClient = axios.create({
  * @returns {Promise<Object>} A promise that resolves to an object with days as keys and matches as values.
  */
 export const fetchSchedules = async () => {
-  try {
-    const response = await apiClient.get('/schedules');
-    // The backend returns an array of matches, we need to group them by day
-    const groupedByDay = response.data.reduce((acc, match) => {
-      const day = match.day || 'N/A';
-      if (!acc[day]) {
-        acc[day] = [];
-      }
-      acc[day].push(match);
-      return acc;
-    }, {});
-    return groupedByDay;
-  } catch (error) {
-    console.error('Error fetching schedules:', error);
-    throw error;
-  }
+  const response = await apiClient.get('/schedules');
+  const groupedByDay = response.data.reduce((acc, match) => {
+    const day = match.day || 'N/A';
+    if (!acc[day]) acc[day] = [];
+    acc[day].push(match);
+    return acc;
+  }, {});
+  return groupedByDay;
 };
 
 /**
@@ -40,27 +31,17 @@ export const fetchSchedules = async () => {
  * @returns {Promise<Array>} A promise that resolves to an array of all fixtures.
  */
 export const fetchFixtures = async () => {
-    try {
-      const response = await apiClient.get('/fixtures');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching fixtures:', error);
-      throw error;
-    }
-  };
+  const response = await apiClient.get('/fixtures');
+  return response.data;
+};
 
 /**
  * Fetches the latest standings from the API.
  * @returns {Promise<Array>} A promise that resolves to an array of standings data.
  */
 export const fetchStandings = async () => {
-  try {
-    const response = await apiClient.get('/table/latest');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching standings:', error);
-    throw error;
-  }
+  const response = await apiClient.get('/table/latest');
+  return response.data;
 };
 
 /**
@@ -68,13 +49,8 @@ export const fetchStandings = async () => {
  * @returns {Promise<Array>} A promise that resolves to an array of player data.
  */
 export const fetchPlayers = async () => {
-  try {
-    const response = await apiClient.get('/player-stats/totals');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching players:', error);
-    throw error;
-  }
+  const response = await apiClient.get('/player-stats/totals');
+  return response.data;
 };
 
 /**
