@@ -4,7 +4,11 @@ module.exports = {
     browser: true, 
     es2020: true,
     node: true,
-    jest: true // Adds globals for describe, it, expect
+    // It seems "jest: true" should be replaced with "vitest/globals: true"
+    // or just rely on the setupFiles for vitest.
+    // However, the user explicitly asked for 'jest: true'.
+    // For now, I will follow the instruction exactly.
+    jest: true 
   },
   extends: [
     'eslint:recommended',
@@ -16,11 +20,17 @@ module.exports = {
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   settings: { react: { version: '18.2' } },
   plugins: ['react-refresh'],
+  // Add globals for Vitest
+  globals: {
+    describe: 'readonly',
+    it: 'readonly',
+    expect: 'readonly',
+    vi: 'readonly',
+    beforeEach: 'readonly',
+    afterEach: 'readonly',
+  },
   rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     'react/prop-types': 'off',
     // Ignore "React" unused var because we might still have imports in some files
     'no-unused-vars': ['warn', { 'varsIgnorePattern': '^React$' }],

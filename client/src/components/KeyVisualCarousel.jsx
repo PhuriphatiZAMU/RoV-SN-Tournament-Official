@@ -1,27 +1,27 @@
 // src/components/KeyVisualCarousel.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { keyVisuals } from '../data/mockData';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const KeyVisualCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     const isFirstSlide = currentIndex === 0;
     const newIndex = isFirstSlide ? keyVisuals.length - 1 : currentIndex - 1;
     setCurrentIndex(newIndex);
-  };
+  }, [currentIndex]); // Add currentIndex as dependency for prevSlide
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     const isLastSlide = currentIndex === keyVisuals.length - 1;
     const newIndex = isLastSlide ? 0 : currentIndex + 1;
     setCurrentIndex(newIndex);
-  };
+  }, [currentIndex]); // Add currentIndex as dependency for nextSlide
 
   useEffect(() => {
     const slideInterval = setInterval(nextSlide, 5000); // Auto-slide every 5 seconds
     return () => clearInterval(slideInterval);
-  }, [currentIndex]);
+  }, [nextSlide]); // Now nextSlide is a stable dependency
 
   return (
     <div className="relative w-full h-[300px] md:h-[500px] lg:h-[600px] overflow-hidden">

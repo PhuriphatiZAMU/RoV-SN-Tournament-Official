@@ -1,7 +1,6 @@
 // src/components/UpNextWidget.jsx
 import React from 'react';
 import { upcomingMatches } from '../data/mockData';
-import { Clock } from 'lucide-react';
 
 const UpNextWidget = () => {
   return (
