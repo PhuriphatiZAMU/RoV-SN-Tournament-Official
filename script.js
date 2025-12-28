@@ -16,21 +16,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 2. Fetch Schedule & Results Parallelly ---
     try {
+        console.log("🔄 Connecting to API:", API_BASE_URL);
+
         const [scheduleRes, resultsRes] = await Promise.all([
-            fetch(`${API_BASE_URL}/api/schedules`).catch(() => null),
-            fetch(`${API_BASE_URL}/api/results`).catch(() => null)
+            fetch(`${API_BASE_URL}/api/schedules`).catch(err => {
+                console.error("❌ Schedule Fetch Error:", err);
+                return null;
+            }),
+            fetch(`${API_BASE_URL}/api/results`).catch(err => {
+                console.error("❌ Result Fetch Error:", err);
+                return null;
+            })
         ]);
 
-        let scheduleData = scheduleRes && scheduleRes.ok ? await scheduleRes.json() : null;
-        globalResults = resultsRes && resultsRes.ok ? await resultsRes.json() : [];
+        let scheduleData = null;
+        
+        if (scheduleRes && scheduleRes.ok) {
+            scheduleData = await scheduleRes.json();
+            console.log("✅ Schedule loaded from Database:", scheduleData);
+        } else {
+            console.warn("⚠️ API Unreachable or No Data");
+        }
 
-        // Fallback Logic
+        globalResults = (resultsRes && resultsRes.ok) ? await resultsRes.json() : [];
+
+        // --- REMOVED LOCAL STORAGE FALLBACK ---
+        // ลบส่วนที่ดึงข้อมูลเก่าจาก Local Storage ออก เพื่อให้มั่นใจว่าข้อมูลมาจาก DB เท่านั้น
+        /*
         if (!scheduleData) {
             const saved = localStorage.getItem('rov_tournaments');
-            if(saved) {
-                 try { scheduleData = JSON.parse(saved); if(Array.isArray(scheduleData)) scheduleData=scheduleData[scheduleData.length-1]; } catch(e){}
-            }
+            // ...
         }
+        */
 
         if(scheduleData) {
             globalSchedule = scheduleData.schedule;
@@ -66,6 +83,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (document.getElementById('stats-player-list')) {
                 fetchAndRenderPlayerStats();
             }
+        } else {
+            // Show Error UI if no data from DB
+            const errHtml = `
+                <div class="tw-text-center tw-py-12 tw-text-gray-500">
+                    <i class="fas fa-exclamation-circle tw-text-3xl tw-text-red-400 tw-mb-3"></i>
+                    <p>Unable to load tournament data.</p>
+                    <p class="tw-text-xs">Server might be waking up, please refresh in a few seconds.</p>
+                </div>`;
+            
+            if (document.getElementById('matchesContainer')) document.getElementById('matchesContainer').innerHTML = errHtml;
+            if (document.getElementById('home-matches-container')) document.getElementById('home-matches-container').innerHTML = errHtml;
         }
 
     } catch (e) { console.error("Init Error:", e); }
