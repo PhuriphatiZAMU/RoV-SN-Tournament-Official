@@ -1,28 +1,145 @@
 require('dotenv').config();
-// 3. Game Stat Schema (เก็บสถิติละเอียดรายเกม) [NEW]
-// ใช้เก็บข้อมูลหลังจบแต่ละเกมย่อยใน BO3
+const express = require('express');
+const mongoose = require('mongoose'); // 1. Import mongoose ก่อนเสมอ
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(bodyParser.json());
+
+// --- Database Connection ---
+// ใน Production แนะนำให้ใช้ process.env.MONGO_URI แต่ถ้า hardcode ไว้ก็ต้องแน่ใจว่า string ถูกต้อง
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://phuriphatizamu_db_user:nNkkDsJQiDcI4uh3@cluster.bi2ornw.mongodb.net/rov_sn_tournament_2026?retryWrites=true&w=majority&appName=Cluster";
+
+console.log("🔄 Connecting to MongoDB...");
+mongoose.connect(MONGO_URI)
+    .then(() => console.log(`✅ MongoDB Connected`))
+    .catch(err => console.error('❌ MongoDB Error:', err));
+
+// --- Schemas & Models (ประกาศหลังจาก Import mongoose แล้ว) ---
+
+// 1. Schedule Schema
+const ScheduleSchema = new mongoose.Schema({
+    teams: [String],
+    potA: [String],
+    potB: [String],
+    schedule: Array,
+    createdAt: { type: Date, default: Date.now }
+});
+const Schedule = mongoose.model('Schedule', ScheduleSchema, 'schedules');
+
+// 2. Result Schema
+const ResultSchema = new mongoose.Schema({
+    matchId: String,
+    matchDay: Number,
+    teamBlue: String,
+    teamRed: String,
+    scoreBlue: Number,
+    scoreRed: Number,
+    winner: String,
+    loser: String,
+    gameDetails: Array,
+    createdAt: { type: Date, default: Date.now }
+});
+const Result = mongoose.model('Result', ResultSchema, 'results');
+
+// 3. Game Stat Schema (ต้องประกาศหลังจาก mongoose ถูก import แล้วเช่นกัน)
 const GameStatSchema = new mongoose.Schema({
-    matchId: String,        // อ้างอิง Match ID เช่น "1_Buriram_vs_Talon"
-    gameNumber: Number,     // เกมที่เท่าไหร่ (1, 2, 3)
-    teamName: String,       // ชื่อทีม
-    playerName: String,     // ชื่อผู้เล่น
+    matchId: String,
+    gameNumber: Number,
+    teamName: String,
+    playerName: String,
     kills: Number,
     deaths: Number,
     assists: Number,
     gold: Number,
-    damage: Number,         // ดาเมจที่ทำได้
-    damageTaken: Number,    // ดาเมจที่รับ
-    mvp: Boolean,           // เป็น MVP หรือไม่
-    gameDuration: Number,   // ระยะเวลาเกม (วินาที)
-    win: Boolean,           // ชนะหรือไม่
+    damage: Number,
+    damageTaken: Number,
+    mvp: Boolean,
+    gameDuration: Number,
+    win: Boolean,
     createdAt: { type: Date, default: Date.now }
 });
 const GameStat = mongoose.model('GameStat', GameStatSchema, 'gamestats');
 
-const mongoose = require('mongoose');
-// --- STATS API [NEW] ---
 
-// GET: ดึงสถิติผู้เล่นรวม (Aggregated Player Stats)
+// --- API Routes ---
+
+app.get('/', (req, res) => {
+    res.send('<h1>RoV SN Tournament API</h1><p>Status: Online</p>');
+});
+
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// GET: Schedules
+app.get('/api/schedules', async (req, res) => {
+    try {
+        const latest = await Schedule.findOne().sort({ createdAt: -1 });
+        if (!latest) return res.status(404).json({ message: "No schedule found" });
+        res.json(latest);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST: Schedules
+app.post('/api/schedules', async (req, res) => {
+    try {
+        const newSchedule = new Schedule(req.body);
+        const saved = await newSchedule.save();
+        res.status(201).json(saved);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET: Results
+app.get('/api/results', async (req, res) => {
+    try {
+        const results = await Result.find().sort({ matchDay: 1 });
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST: Results
+app.post('/api/results', async (req, res) => {
+    try {
+        const { matchDay, teamBlue, teamRed, scoreBlue, scoreRed } = req.body;
+        
+        let winner = null;
+        let loser = null;
+        if (scoreBlue > scoreRed) {
+            winner = teamBlue;
+            loser = teamRed;
+        } else {
+            winner = teamRed;
+            loser = teamBlue;
+        }
+
+        const matchId = `${matchDay}_${teamBlue}_vs_${teamRed}`.replace(/\s+/g, '');
+
+        const resultData = {
+            matchId, matchDay, teamBlue, teamRed, scoreBlue, scoreRed, winner, loser
+        };
+
+        const result = await Result.findOneAndUpdate(
+            { matchId: matchId }, 
+            resultData, 
+            { upsert: true, new: true }
+        );
+
+        res.status(201).json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET: Player Stats
 app.get('/api/player-stats', async (req, res) => {
     try {
         const stats = await GameStat.aggregate([
@@ -49,10 +166,10 @@ app.get('/api/player-stats', async (req, res) => {
                             { $divide: [{ $add: ["$totalKills", "$totalAssists"] }, "$totalDeaths"] }
                         ]
                     },
-                    gpm: { $divide: ["$totalGold", "$gamesPlayed"] } // Simplified GPM (avg gold per game)
+                    gpm: { $divide: ["$totalGold", "$gamesPlayed"] }
                 }
             },
-            { $sort: { kda: -1 } } // เรียงตาม KDA มากไปน้อย
+            { $sort: { kda: -1 } }
         ]);
         res.json(stats);
     } catch (error) {
@@ -60,7 +177,7 @@ app.get('/api/player-stats', async (req, res) => {
     }
 });
 
-// GET: ดึงสถิติทีมรวม (Aggregated Team Stats)
+// GET: Team Stats
 app.get('/api/team-stats', async (req, res) => {
     try {
         const stats = await GameStat.aggregate([
@@ -71,7 +188,7 @@ app.get('/api/team-stats', async (req, res) => {
                     totalDeaths: { $sum: "$deaths" },
                     totalAssists: { $sum: "$assists" },
                     totalGold: { $sum: "$gold" },
-                    gamesPlayed: { $sum: 1 }, // Note: This counts player-games, need to divide by 5 for actual team games if storing per player
+                    gamesPlayed: { $sum: 1 },
                     wins: { $sum: { $cond: ["$win", 1, 0] } }
                 }
             },
@@ -79,10 +196,9 @@ app.get('/api/team-stats', async (req, res) => {
                 $project: {
                     teamName: "$_id",
                     totalKills: 1, totalDeaths: 1, totalAssists: 1, totalGold: 1,
-                    // สมมติว่าเก็บข้อมูลรายผู้เล่น หาร 5 เพื่อหาจำนวนเกมจริง (ถ้าเก็บรายทีมไม่ต้องหาร)
-                    // ในที่นี้สมมติเก็บรายผู้เล่น
-                    realGamesPlayed: { $divide: ["$gamesPlayed", 5] }, 
-                    realWins: { $divide: ["$wins", 5] }
+                    // Assuming 5 players per team, divide by 5 to get actual team stats
+                    realGamesPlayed: { $ceil: { $divide: ["$gamesPlayed", 5] } }, 
+                    realWins: { $ceil: { $divide: ["$wins", 5] } }
                 }
             },
             { $sort: { realWins: -1 } }
@@ -93,7 +209,7 @@ app.get('/api/team-stats', async (req, res) => {
     }
 });
 
-// GET: ดึงสถิติรวมของทัวร์นาเมนต์ (Season Stats)
+// GET: Season Stats
 app.get('/api/season-stats', async (req, res) => {
     try {
         const stats = await GameStat.aggregate([
@@ -102,7 +218,7 @@ app.get('/api/season-stats', async (req, res) => {
                     _id: null,
                     totalKills: { $sum: "$kills" },
                     avgGameDuration: { $avg: "$gameDuration" },
-                    totalDarkSlayers: { $sum: 0 } // Mock field (ต้องเพิ่ม field ใน schema ถ้าจะเก็บจริง)
+                    totalDarkSlayers: { $sum: 0 }
                 }
             }
         ]);
@@ -112,87 +228,19 @@ app.get('/api/season-stats', async (req, res) => {
     }
 });
 
-// POST: บันทึกสถิติเกม (Batch Insert for a whole game)
+// POST: Stats (Batch Insert)
 app.post('/api/stats', async (req, res) => {
     try {
-        const statsArray = req.body; // รับเป็น Array ของผู้เล่นทุกคนในเกมนั้น
+        const statsArray = req.body;
         if (!Array.isArray(statsArray)) {
             return res.status(400).json({ error: "Data must be an array of player stats" });
         }
-
         const savedStats = await GameStat.insertMany(statsArray);
-        console.log(`✅ Saved ${savedStats.length} player stats records.`);
         res.status(201).json(savedStats);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// POST: Schedules (For Admin/Draft)
-app.post('/api/schedules', async (req, res) => {
-    try {
-        const newSchedule = new Schedule(req.body);
-        const saved = await newSchedule.save();
-        res.status(201).json(saved);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// --- RESULTS API [NEW] ---
-
-// GET: ดึงผลการแข่งขันทั้งหมด
-app.get('/api/results', async (req, res) => {
-    try {
-        const results = await Result.find().sort({ matchDay: 1 });
-        res.json(results);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// POST: บันทึกผลการแข่งขัน (Update Match Day immediately logic)
-app.post('/api/results', async (req, res) => {
-    try {
-        const { matchDay, teamBlue, teamRed, scoreBlue, scoreRed } = req.body;
-
-        // 1. Validation Logic for BO3
-        if (scoreBlue < 0 || scoreRed < 0 || (scoreBlue + scoreRed > 3)) {
-            return res.status(400).json({ error: "Invalid BO3 Score" });
-        }
-        
-        // 2. Determine Winner
-        let winner = null;
-        let loser = null;
-        if (scoreBlue > scoreRed) {
-            winner = teamBlue;
-            loser = teamRed;
-        } else {
-            winner = teamRed;
-            loser = teamBlue;
-        }
-
-        // 3. Create Unique Match ID
-        const matchId = `${matchDay}_${teamBlue}_vs_${teamRed}`.replace(/\s+/g, '');
-
-        // 4. Save/Update Result (Upsert)
-        const resultData = {
-            matchId, matchDay, teamBlue, teamRed, scoreBlue, scoreRed, winner, loser
-        };
-
-        const result = await Result.findOneAndUpdate(
-            { matchId: matchId }, 
-            resultData, 
-            { upsert: true, new: true } // ถ้ามีแล้วอัปเดต ถ้าไม่มีให้สร้างใหม่
-        );
-
-        console.log(`✅ Match Result Saved: ${teamBlue} ${scoreBlue} - ${scoreRed} ${teamRed}`);
-        res.status(201).json(result);
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
+// Start Server
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
