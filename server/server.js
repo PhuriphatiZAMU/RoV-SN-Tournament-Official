@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(cors({
+    origin: 'https://phuriphatizamu.github.io' // อนุญาตเฉพาะเว็บของคุณ
+}));
 
 // --- Database Connection ---
 // ใน Production แนะนำให้ใช้ process.env.MONGO_URI แต่ถ้า hardcode ไว้ก็ต้องแน่ใจว่า string ถูกต้อง
