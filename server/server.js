@@ -212,7 +212,7 @@ app.get('/api/team-stats', async (req, res) => {
     }
 });
 
-// GET: Season Stats
+// GET: Season Stats (Updated to include Total Deaths)
 app.get('/api/season-stats', async (req, res) => {
     try {
         const stats = await GameStat.aggregate([
@@ -220,12 +220,13 @@ app.get('/api/season-stats', async (req, res) => {
                 $group: {
                     _id: null,
                     totalKills: { $sum: "$kills" },
+                    totalDeaths: { $sum: "$deaths" }, // เพิ่มบรรทัดนี้
                     avgGameDuration: { $avg: "$gameDuration" },
                     totalDarkSlayers: { $sum: 0 }
                 }
             }
         ]);
-        res.json(stats[0] || { totalKills: 0, avgGameDuration: 0 });
+        res.json(stats[0] || { totalKills: 0, totalDeaths: 0, avgGameDuration: 0 });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
