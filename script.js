@@ -314,7 +314,7 @@ async function fetchAndRenderSeasonStats() {
                     <div class="tw-text-5xl tw-font-display tw-font-bold tw-text-uefa-dark">${data.totalKills.toLocaleString()}</div>
                 </div>
                 <div class="tw-bg-white tw-p-6 tw-rounded tw-shadow tw-border-t-4 tw-border-cyan-aura">
-                    <p class="tw-text-gray-500 tw-uppercase tw-text-xs tw-font-bold tw-mb-2">Dark Slayers (Est)</p>
+                    <p class="tw-text-gray-500 tw-uppercase tw-text-xs tw-font-bold tw-mb-2">Total Deaths</p>
                     <div class="tw-text-5xl tw-font-display tw-font-bold tw-text-uefa-dark">${data.totalDeaths.toLocaleString()}</div>
                 </div>
                 <div class="tw-bg-white tw-p-6 tw-rounded tw-shadow tw-border-t-4 tw-border-cyan-aura">
