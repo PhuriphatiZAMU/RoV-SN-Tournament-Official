@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 app.use(cors({
-    origin: 'https://phuriphatizamu.github.io' // อนุญาตเฉพาะเว็บของคุณ
+    origin: 'https://phuriphatizamu.github.io' // อนุญาตเฉพาะเว็บของเรา
 }));
 
 // --- Database Connection ---
